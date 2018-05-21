@@ -2,6 +2,7 @@
 // Created by 孙庆耀 on 2018/5/20.
 //
 
+#include "compiler.h"
 #include "vm.h"
 
 #include <stdio.h>
@@ -33,6 +34,7 @@ ExecuteResult execute_insert(Statement *statement, Table *table) {
 }
 
 ExecuteResult execute_select(Statement *statement, Table *table) {
+    (void) statement;
     Row row;
     for (size_t i = 0; i < table->num_rows; i++) {
         deserialize_row(&row, row_slot(table, i));

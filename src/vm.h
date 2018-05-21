@@ -9,7 +9,7 @@
 
 
 // Representation of a serialized row (without structure padding)
-#define size_of_attribute(Struct, Attribute) (sizeof (Struct *){0}->Attribute)
+#define size_of_attribute(Struct, Attribute) (sizeof(((Struct){0}).Attribute))
 
 #define ID_SIZE             size_of_attribute(Row, id)
 #define USERNAME_SIZE       size_of_attribute(Row, username)

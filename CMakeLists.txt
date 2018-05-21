@@ -3,4 +3,10 @@ project(database C)
 
 set(CMAKE_C_STANDARD 11)
 
-add_executable(database main.c repl.c repl.h compiler.c compiler.h vm.c vm.h)
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+find_package(Check REQUIRED)
+include_directories(${CHECK_INCLUDE_DIRS})
+link_directories(${CHECK_LIBRARY_DIRS})
+
+add_subdirectory(src)
+add_subdirectory(tests)
