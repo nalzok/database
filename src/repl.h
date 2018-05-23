@@ -15,6 +15,8 @@ typedef struct InputBuffer_t {
 
 InputBuffer *new_input_buffer(void);
 
+void free_input_buffer(InputBuffer *input_buffer);
+
 void print_prompt(void);
 
 void read_input(InputBuffer *);

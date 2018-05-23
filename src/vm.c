@@ -21,6 +21,15 @@ Table *new_table(void) {
     return table;
 }
 
+void free_table(Table *table) {
+    size_t i;
+    for (i = 0; i < TABLE_MAX_PAGES; i++) {
+        // Anyway, free(NULL); has no effect
+        free(table->pages[i]);
+    }
+    free(table);
+}
+
 ExecuteResult execute_insert(Statement *statement, Table *table) {
     if (table->num_rows >= TABLE_MAX_ROWS) {
         return EXECUTE_TABLE_FULL;

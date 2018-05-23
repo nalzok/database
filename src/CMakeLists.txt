@@ -13,7 +13,8 @@ set(HEADERS
         database.h
         repl.h
         compiler.h
-        vm.h)
+        vm.h
+        table.h)
 
 add_library(libdatabase STATIC ${LIB_SOURCES} ${HEADERS})
 

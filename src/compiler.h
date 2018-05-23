@@ -6,6 +6,7 @@
 #define DATABASE_COMPILER_H
 
 #include "repl.h"
+#include "table.h"
 
 #include <stdint.h>
 
@@ -41,7 +42,8 @@ typedef struct Statement_t {
     };
 } Statement;
 
-MetaCommandResult do_meta_command(InputBuffer *input_buffer);
+MetaCommandResult do_meta_command(InputBuffer *input_buffer,
+                                  Table *table);
 
 PrepareResult prepare_statement(InputBuffer *input_buffer,
                                 Statement *statement);

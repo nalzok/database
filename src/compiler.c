@@ -2,6 +2,7 @@
 // Created by 孙庆耀 on 2018/5/20.
 //
 
+#include "repl.h"
 #include "compiler.h"
 
 #include <string.h>
@@ -11,9 +12,11 @@
 #include <errno.h>
 
 
-MetaCommandResult do_meta_command(InputBuffer *input_buffer) {
+MetaCommandResult do_meta_command(InputBuffer *input_buffer, Table *table) {
     if (strcmp(input_buffer->buffer, ".exit") == 0) {
         puts("Fare thee well.");
+        free_input_buffer(input_buffer);
+        free_table(table);
         exit(EXIT_SUCCESS);
     } else {
         return META_COMMAND_UNRECOGNIZED_COMMAND;
@@ -38,6 +41,8 @@ PrepareResult prepare_statement(InputBuffer *input_buffer,
         }
 
         statement->row_to_insert.id = strtoumax(input_id_str, NULL, 10);
+
+        free(input_id_str);
 
         errno = 0;
         if (errno) {

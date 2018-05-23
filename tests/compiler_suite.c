@@ -10,9 +10,10 @@
 
 START_TEST (test_do_meta_command)
     {
+        Table *table = new_table();
         InputBuffer *input_buffer = new_input_buffer();
         input_buffer->buffer = ".hello";
-        ck_assert_int_eq(do_meta_command(input_buffer),
+        ck_assert_int_eq(do_meta_command(input_buffer, table),
                          META_COMMAND_UNRECOGNIZED_COMMAND);
     }
 END_TEST
