@@ -73,52 +73,63 @@ void test_app_io(const char *test_name,
     const char *output_fname_fmt = "/tmp/temp.test.%s.output.XXXXXX";
     char *output_fname = malloc(strlen(output_fname_fmt) + strlen(test_name) + 1);
     sprintf(output_fname, output_fname_fmt, test_name);
-    int output_fd = mkstemp(output_fname);
+    // create empty file
+    close(mkstemp(output_fname));
     // redirect output
     freopen(output_fname, "w", stdout);
     setbuf(stdout, NULL);
-    free(output_fname);
 
 
+    // Run tests in a child process
     pid_t child_pid = fork();
     if (child_pid == 0) {
         launch_app();
+        exit(EXIT_SUCCESS);
     } else {
         int stat_loc;
         waitpid(child_pid, &stat_loc, WUNTRACED);
     }
 
-
+    // prepare output
     struct stat buf;
-    if (fstat(output_fd, &buf) < 0) {
-        perror("fstat");
+    if (stat(output_fname, &buf) < 0) {
+        perror("stat");
         exit(EXIT_FAILURE);
     }
     size_t output_len = (size_t) buf.st_size;
-
     char *output = malloc(output_len + 1);
-    FILE *output_fp = fdopen(output_fd, "r");
+    if (!output) {
+        perror("malloc");
+        exit(EXIT_FAILURE);
+    }
+    FILE *output_fp = fopen(output_fname, "r");
     fread(output, 1, output_len, output_fp);
     output[output_len] = '\0';
     fclose(output_fp);
-
+    free(output_fname);
     if (errno) {
         perror("File IO");
         exit(EXIT_FAILURE);
     }
 
+    // prepare expected
     char *output_ptr = output, *tofree, *expected_ptr;
     tofree = expected_ptr = strdup(expected);
-    char *output_line = NULL, *expected_line = NULL;
-    while (output_ptr && expected_ptr) {
-        output_line = strsep(&output_ptr, "\n");
-        expected_line = strsep(&expected_ptr, "\n");
-        ck_assert_str_eq(output_line, expected_line);
+    if (!expected_ptr) {
+        perror("strdup");
+        exit(EXIT_FAILURE);
     }
-    // make sure the end of the string was reached
+
+    char *output_line_ptr = NULL, *expected_line_ptr = NULL;
+    while (output_ptr && expected_ptr) {
+        output_line_ptr = strsep(&output_ptr, "\n");
+        expected_line_ptr = strsep(&expected_ptr, "\n");
+        ck_assert_str_eq(output_line_ptr, expected_line_ptr);
+    }
+    // make sure the end of both strings were reached
     ck_assert_ptr_null(output_ptr);
     ck_assert_ptr_null(expected_ptr);
 
-    free(tofree);
     free(output);
+    free(tofree);
 }
