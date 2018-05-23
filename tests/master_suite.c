@@ -82,12 +82,20 @@ void test_app_io(const char *test_name,
 
     // Run tests in a child process
     pid_t child_pid = fork();
+    if (child_pid < 0) {
+        perror("fork");
+        exit(EXIT_FAILURE);
+    }
     if (child_pid == 0) {
         launch_app();
         exit(EXIT_SUCCESS);
     } else {
         int stat_loc;
-        waitpid(child_pid, &stat_loc, WUNTRACED);
+        if (waitpid(child_pid, &stat_loc, WUNTRACED) != child_pid) {
+            perror("waitpid");
+            // using `ck_abort` instead of `exit`ing because error is caused by the child process
+            ck_abort();
+        }
     }
 
     // prepare output
