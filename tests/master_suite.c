@@ -59,7 +59,16 @@ void test_app_io(const char *test_name,
                  void (*launch_app)(void)) {
     errno = 0;
 
-    const char *input_fname_fmt = "/tmp/temp.test.%s.input";
+    struct stat st;
+    if (stat("/tmp/temp.test/", &st) == -1) {
+        errno = 0;
+        if (mkdir("/tmp/temp.test/", 0755) < 0) {
+            perror("mkdir");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    const char *input_fname_fmt = "/tmp/temp.test/%s.input";
     char *input_fname = malloc(strlen(input_fname_fmt) + strlen(test_name) + 1);
     sprintf(input_fname, input_fname_fmt, test_name);
     // write input to file
@@ -70,7 +79,7 @@ void test_app_io(const char *test_name,
     freopen(input_fname, "r", stdin);
     free(input_fname);
 
-    const char *output_fname_fmt = "/tmp/temp.test.%s.output.XXXXXX";
+    const char *output_fname_fmt = "/tmp/temp.test/%s.output.XXXXXX";
     char *output_fname = malloc(strlen(output_fname_fmt) + strlen(test_name) + 1);
     sprintf(output_fname, output_fname_fmt, test_name);
     // create empty file
@@ -81,6 +90,7 @@ void test_app_io(const char *test_name,
 
 
     // Run tests in a child process
+    int stat_loc;
     pid_t child_pid = fork();
     if (child_pid < 0) {
         perror("fork");
@@ -90,7 +100,6 @@ void test_app_io(const char *test_name,
         launch_app();
         exit(EXIT_SUCCESS);
     } else {
-        int stat_loc;
         if (waitpid(child_pid, &stat_loc, WUNTRACED) != child_pid) {
             perror("waitpid");
             // using `ck_abort` instead of `exit`ing because error is caused by the child process
@@ -98,13 +107,16 @@ void test_app_io(const char *test_name,
         }
     }
 
+    // make sure child process exited zero
+    ck_assert(WIFEXITED(stat_loc));
+    ck_assert_int_eq(WEXITSTATUS(stat_loc), 0);
+
     // prepare output
-    struct stat buf;
-    if (stat(output_fname, &buf) < 0) {
+    if (stat(output_fname, &st) < 0) {
         perror("stat");
         exit(EXIT_FAILURE);
     }
-    size_t output_len = (size_t) buf.st_size;
+    size_t output_len = (size_t) st.st_size;
     char *output = malloc(output_len + 1);
     if (!output) {
         perror("malloc");
@@ -115,6 +127,8 @@ void test_app_io(const char *test_name,
     output[output_len] = '\0';
     fclose(output_fp);
     free(output_fname);
+
+    // error checking
     if (errno) {
         perror("File IO");
         exit(EXIT_FAILURE);
